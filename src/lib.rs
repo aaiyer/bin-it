@@ -140,13 +140,13 @@ impl BinaryWriter {
     self.data.extend(bytes);
   }
 
-  /// Writes a slice of u8 to the buffer. First writes the length as u32, then the bytes.
+  /// Writes a vector of u8 to the buffer. First writes the length as u32, then the bytes.
   pub fn write_vec_u8(&mut self, value: &[u8]) {
     self.write_u32(value.len() as u32);
     self.data.extend(value);
   }
 
-  /// Writes a slice of u16 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of u16 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_u16(&mut self, value: &[u16]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -154,7 +154,7 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of u32 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of u32 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_u32(&mut self, value: &[u32]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -162,7 +162,7 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of u64 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of u64 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_u64(&mut self, value: &[u64]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -170,7 +170,7 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of i8 to the buffer. First writes the length as u32, then the bytes.
+  /// Writes a vector of i8 to the buffer. First writes the length as u32, then the bytes.
   pub fn write_vec_i8(&mut self, value: &[i8]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -178,7 +178,7 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of i16 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of i16 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_i16(&mut self, value: &[i16]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -186,7 +186,7 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of i32 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of i32 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_i32(&mut self, value: &[i32]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -194,7 +194,7 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of i64 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of i64 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_i64(&mut self, value: &[i64]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -202,7 +202,7 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of f32 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of f32 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_f32(&mut self, value: &[f32]) {
     self.write_u32(value.len() as u32);
     for &v in value {
@@ -210,11 +210,19 @@ impl BinaryWriter {
     }
   }
 
-  /// Writes a slice of f64 to the buffer. First writes the length as u32, then the bytes in little-endian.
+  /// Writes a vector of f64 to the buffer. First writes the length as u32, then the bytes in little-endian.
   pub fn write_vec_f64(&mut self, value: &[f64]) {
     self.write_u32(value.len() as u32);
     for &v in value {
       self.write_f64(v);
+    }
+  }
+
+  /// Writes a vector of strings to the buffer. First writes the length as u32, then each string serialized.
+  pub fn write_vec_string(&mut self, value: &[String]) {
+    self.write_u32(value.len() as u32);
+    for s in value {
+      self.write_string(s);
     }
   }
 }
@@ -419,6 +427,16 @@ impl<'a> BinaryReader<'a> {
     Ok(vec)
   }
 
+  /// Reads a vector of strings from the buffer. Expects a u32 length followed by serialized strings.
+  pub fn read_vec_string(&mut self) -> Result<Vec<String>, String> {
+    let length = self.read_u32()? as usize;
+    let mut vec = Vec::with_capacity(length);
+    for _ in 0..length {
+      vec.push(self.read_string()?);
+    }
+    Ok(vec)
+  }
+
   /// Ensures that there are at least `size` bytes available to read.
   fn ensure_available(&self, size: usize) -> Result<(), String> {
     if self.cursor + size > self.data.len() {
@@ -491,6 +509,29 @@ mod tests {
     assert!((read_f64[0] - 1.1).abs() < 1e-10);
     assert!((read_f64[1] - 2.2).abs() < 1e-10);
     assert!((read_f64[2] - 3.3).abs() < 1e-10);
+  }
+
+  #[test]
+  fn test_binary_writer_reader_vec_string() {
+    let mut writer = BinaryWriter::new();
+
+    // Write a vector of strings
+    let strings = vec![
+      "Hello".to_string(),
+      "Bin-It".to_string(),
+      "Serialization".to_string(),
+      "".to_string(),
+      "🚀✨".to_string(),
+    ];
+    writer.write_vec_string(&strings);
+
+    let data = writer.get_data().clone();
+
+    let mut reader = BinaryReader::new(&data);
+
+    // Read and assert the vector of strings
+    let read_strings = reader.read_vec_string().unwrap();
+    assert_eq!(read_strings, strings);
   }
 
   #[test]

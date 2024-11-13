@@ -1,6 +1,6 @@
 [package]
 name = "bin-it"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Anand Aiyer <aaiyer@gmail.com>"]
 edition = "2021"
 description = "Simple, efficient Rust library for binary serialization and deserialization"
