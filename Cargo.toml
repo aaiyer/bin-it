@@ -1,0 +1,14 @@
+[package]
+name = "bin-it"
+version = "1.0.0"
+authors = ["Anand Aiyer <aaiyer@gmail.com>"]
+edition = "2021"
+description = "Simple, efficient Rust library for binary serialization and deserialization"
+repository = "https://github.com/aaiyer/bin-it"
+homepage = "https://github.com/aaiyer/bin-it"
+readme = "README.md"
+license = "MIT"
+keywords = ["serialization", "binary"]
+categories = ["data-structures"]
+
+[dependencies]
