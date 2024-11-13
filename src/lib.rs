@@ -74,8 +74,8 @@ impl BinaryWriter {
   }
 
   /// Returns a reference to the internal byte buffer.
-  pub fn get_data(&self) -> &Vec<u8> {
-    &self.data
+  pub fn get_data(self) -> Vec<u8> {
+    self.data
   }
 
   /// Writes a u8 value to the buffer.
